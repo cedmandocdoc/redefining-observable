@@ -4,7 +4,7 @@ _An attempt to redefine Observable at its core_
 
 ## Introduction
 
-Observable is the building block of reactive application, it is useful for logic that deals with asynchrony like promises, timeouts, web sockets and dom events. Based on the article [`Learning Observable By Building Observable`](https://medium.com/@benlesh/learning-observable-by-building-observable-d5da57405d87) authored by Ben Lesh, Observable is defined as a function that takes an observer and returns a function. It connects the observer to something that produce values and returns a means to cancel the connection.
+Observable is the building block of reactive application, it is useful for logic that deals with asynchrony like promises, timeouts, web sockets and dom events. Based on the article [Learning Observable By Building Observable](https://medium.com/@benlesh/learning-observable-by-building-observable-d5da57405d87) authored by Ben Lesh, Observable is defined as a function that takes an observer and returns a function. It connects the observer to something that produce values and returns a means to cancel the connection.
 
 The definition is widely known and appears on other articles as well, check out the links below for references.
 
@@ -26,8 +26,6 @@ const cancel = observable(data => console.log(data));
 On the code above, the observable takes an observer in the form of a function named `next` which then called on the callback of `setInterval` then returns a function that teardown the connection of the observer to producer by `clearInterval`. Many Observable libraries has this kind of implementation. They may vary on observer types or observable initialization and composition, but always conforms to provide values and cancellation to the observer.
 
 But there could be more to explore of what Observable really is. This article attempts to rethink its current definition, dissecting fundamental properties in a hope to provide a defintion of what it really is at its core.
-
----
 
 ## Observable Redefined
 
@@ -67,8 +65,6 @@ intervalObservable(data => console.log(data), cancelObservable);
 ```
 The code above forms a communication between two observables. The `intervalObservable` accepts an observer which is a function called `next` and an observable called `externalObservable` to listen for cancellation making the `intervalObservable` reactive. The code also shows that some observable may not be reactive, for instance `cancelObservable` doesn't react to an external entity leaving it only as an Observable.
 
----
-
 ## Reactive Observable pattern
 
 Reactive observale pattern opens up a whole new set of doors. Cancellation is one thing, but never limits to that. A timer for instance, it emits data in the form of time but also listens to an external entity when to propogate or when to pause or when to completely stop. Pull observables can be also be build by this pattern, on which the producer listens to a consumer request as an indication that the data will be sent.
@@ -81,8 +77,6 @@ For what a Reactive Observable provides, its defnition could be, an object that 
 const reactiveObservable = (observer, externalObservable) => {};
 ```
 It accepts an observer and an Observable from the outside. Observer is an object that could be in any shape but its purpose should be served and that is a means to emit data. External Observable is an Observable from the outside that could be listened in to and react accordingly.
-
----
 
 ## Speculated Spec
 
