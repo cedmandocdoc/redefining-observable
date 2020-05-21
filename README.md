@@ -112,3 +112,5 @@ For a complete example, see `spec.js` on the examples folder. It exports a funct
 ## Final Words
 
 Observable is in fact a great tool for asynchorouns programming, it connects different async codes in a functioal manner. But the definition of capability of just being observed has been changed due to some problems like the need of cancellation. Maybe a greater tool than Observable is needed, like making the observable reactive to external entity. Combining the idea of being observed and be able to observe creates a powerful tool for reactive programming.
+
+For more actions, check the examples folder.
