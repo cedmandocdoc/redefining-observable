@@ -1,0 +1,120 @@
+# Redefining Observable
+
+_An attempt to redefine Observable at its core_
+
+## Introduction
+
+Observable is the building block of reactive application, it is useful for logic that deals with asynchrony like promises, timeouts, web sockets and dom events. Based on the article [`Learning Observable By Building Observable`](https://medium.com/@benlesh/learning-observable-by-building-observable-d5da57405d87) authored by Ben Lesh, Observable is defined as a function that takes an observer and returns a function. It connects the observer to something that produce values and returns a means to cancel the connection.
+
+The definition is widely known and appears on other articles as well, check out the links below for references.
+
+- [Introduction to Observable](https://medium.com/@davidjtomczyk/introduction-to-observable-85a5122bf260)
+- [JavaScript — Observables Under The Hood](https://netbasal.com/javascript-observables-under-the-hood-2423f760584)
+- [Understanding RxJS Observables and why you need them](https://blog.logrocket.com/understanding-rxjs-observables/)
+
+The implementation follows the same definition. In pseudo code form, it looks like this
+
+```javascript
+const observable = next => {
+  const id = setInterval(() => next('data'), 1000));
+  return () => clearInterval(id);
+};
+
+const cancel = observable(data => console.log(data));
+```
+
+On the code above, the observable takes an observer in the form of a function named `next` which then called on the callback of `setInterval` then returns a function that teardown the connection of the observer to producer by `clearInterval`. Many Observable libraries has this kind of implementation. They may vary on observer types or observable initialization and composition, but always conforms to provide values and cancellation to the observer.
+
+But there could be more to explore of what Observable really is. This article attempts to rethink its current definition, dissecting fundamental properties in a hope to provide a defintion of what it really is at its core.
+
+---
+
+## Observable Redefined
+
+The definition mentioned above shows that Observable properties are the following:
+
+- a function that provides values: any object that able to produce values
+- takes an observer: connects an observer to the producer
+- returns a function: provides a means of turning down the connection
+
+These properties may seem fundamental but not all of them.
+
+Take a look of the English definition of Observable, from [merriam webster](https://www.merriam-webster.com/dictionary/observable), it was defined as `capable of being observed`. Nothing more nothing less, it does not interact back from an external entity.  With that in mind, the only fundamental property of an Observable is when observed it provides something to the observer, this void the cancellation as a fundamental property.
+
+In a real world program implementing an Observable with out a way of cancelling the connection may impose a dangerous problem later on. Leaving an Observable provides data across the program, without having a need of it anymore could result into memory leak or can eat up processes. Cancellation may not be a fundamental property of an Observable but it is an emergence property of a reactive program and plays a crucial role across.
+
+Solving the cancellation problem can never be achieved using only an Observable, a reactive program asks for a more powerful object. First, take a look of the English definition of cancellation, from [merriam webster](https://www.merriam-webster.com/dictionary/cancellation), it was defined as `the act or an instance of canceling`. It is an action so it involves a representation (at least an identification of the action) and an actor. It is like a signal or data provided by an entity, this definition looks just like an Observable, but with context. Cancellation is data signal given by an Observable that represents of cancelling something.
+
+If an Observable needs to be cancelled as requires by a reactive program and cancellation is just also an Observable, then it could mean, that for an Observable to be cancelled it should observe an Observable that emits a representation of cancelling something. This idea reform its definition to be reactive on an external entity. Reactive Observable could be the type of object needed by a reactive program not just a pure Observable.
+
+Below is a pseudo code implementation of a Reactive Observable with cancellation context.
+
+```javascript
+const cancelObservable = (next) => {
+  setTimeout(() => next('cancel'), 2000); // sends data that represents a cancellation
+};
+
+const intervalObservable = (next, externalObservable) => {
+  const id = setInterval(() => next('data'), 1000)); // sends data
+
+  // listens to external observable for cancellation
+  externalObservable(data => {
+    if (data === 'cancel') clearInterval(id); // cancel the propgation when external observable emits cancellation
+  });
+};
+
+intervalObservable(data => console.log(data), cancelObservable);
+```
+The code above forms a communication between two observables. The `intervalObservable` accepts an observer which is a function called `next` and an observable called `externalObservable` to listen for cancellation making the `intervalObservable` reactive. The code also shows that some observable may not be reactive, for instance `cancelObservable` doesn't react to an external entity leaving it only as an Observable.
+
+---
+
+## Reactive Observable pattern
+
+Reactive observale pattern opens up a whole new set of doors. Cancellation is one thing, but never limits to that. A timer for instance, it emits data in the form of time but also listens to an external entity when to propogate or when to pause or when to completely stop. Pull observables can be also be build by this pattern, on which the producer listens to a consumer request as an indication that the data will be sent.
+
+Sometimes the name reactive observable is hard to comprehend. The capability of being observed does not directly implies that data will be sent. Reactive data stream is another name to think of this pattern. Using this term it reverses the idea of being observed to directly to emit data. The term `Reactive Observable` have been only used to gain attraction since the word Observable is famous in reactive programming.
+
+For what a Reactive Observable provides, its defnition could be, an object that can be observed and to observe. Below is its pseudo code form.
+
+```javascript
+const reactiveObservable = (observer, externalObservable) => {};
+```
+It accepts an observer and an Observable from the outside. Observer is an object that could be in any shape but its purpose should be served and that is a means to emit data. External Observable is an Observable from the outside that could be listened in to and react accordingly.
+
+---
+
+## Speculated Spec
+
+A pattern is not enough to apply the idea in a real world program. Specification generalized a pattern and unifies an implementation across programs. A speculated spec of a Reactive Observable is inherited from  implementation of Observables in the wild. The types and rules of observer it accepts are the following:
+
+Types:
+- `open` - callback for ready emission
+- `next` - unary callback for data emission.
+- `fail` - unary callback for error emission.
+- `done` - unary callback for completed or cancelled emission.
+
+Rules:
+- `open` should be called first before running other type of observer, this activate the Observable as well as the other observer methods.
+- `next` and `fail` observer can continue emit errors as long as the Observable is active.
+- `done` should be called with a boolean parameter as an indication whether the Observable has been completed or cancelled, this inactivate the Observable and any prior call to all observer methods should not be allowed.
+
+Below is a pseudo code of its shape together with the observer.
+```javascript
+const myobservable = (open, next, fail, done, observable) => {};
+```
+
+Next is the specification for external observable, for Observables to properly play with each other, their communication should be bounded by some rules. For most of the time, external Observable emits cancellation but it should never limit to that. To handle a generic communication, Symbols can be used to represent a data without colliding with on another. Moreover a representation is not enough for an Observable to react, some representation may impose with the same type but could have a different variables. For instance, a timer Observable that reacts on a signal that jumps over a certain period of time. The representation is to jump but it also needs to tell on what time the timer should jump. The specification for an external Observable should emit a type and payload.
+
+Below is a pseudo code implementation of Observable communication.
+```javascript
+const myobservable = (open, next, fail, done, observable) => {
+  open();
+  next([symbol, payload]); // communicate with other observable through type and a payload
+};
+```
+For a complete example, see `spec.js` on the examples folder. It exports a function that accepts a Reactive Observable and wrap its observer to follow the types and rules stated above.
+
+## Final Words
+
+Observable is in fact a great tool for asynchorouns programming, it connects different async codes in a functioal manner. But the definition of capability of just being observed has been changed due to some problems like the need of cancellation. Maybe a greater tool than Observable is needed, like making the observable reactive to external entity. Combining the idea of being observed and be able to observe creates a powerful tool for reactive programming.
