@@ -43,7 +43,7 @@ In a real world program implementing an Observable with out a way of cancelling 
 
 Solving the cancellation problem can never be achieved using only an Observable, a reactive program asks for a more powerful object. First, take a look of the English definition of cancellation, from [merriam webster](https://www.merriam-webster.com/dictionary/cancellation), it was defined as `the act or an instance of canceling`. It is an action so it involves a representation (at least an identification of the action) and an actor. It is like a signal or data provided by an entity, this definition looks just like an Observable, but with context. Cancellation is data signal given by an Observable that represents of cancelling something.
 
-If an Observable needs to be cancelled as requires by a reactive program and cancellation is just also an Observable, then it could mean, that for an Observable to be cancelled it should observe an Observable that emits a representation of cancelling something. This idea reform its definition to be reactive on an external entity. Reactive Observable could be the type of object needed by a reactive program not just a pure Observable.
+This could mean, that for an Observable to be cancelled it should observe an Observable that emits a representation of cancelling something. This idea reform its definition to be reactive on an external entity. Reactive Observable could be the type of object needed by a reactive program not just a pure Observable.
 
 Below is a pseudo code implementation of a Reactive Observable with cancellation context.
 
