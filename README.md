@@ -80,20 +80,14 @@ It accepts an observer and an Observable from the outside. An observer is an obj
 
 ## Speculated Spec
 
-A pattern is not enough to apply the idea in a real-world program. Specification generalized a pattern and unifies an implementation across programs. A speculated spec of a Reactive Observable is inherited from the implementation of Observables in the wild. The types and rules of the observer it accepts are the following:
+A pattern is not enough to apply the idea in a real-world program. Specification generalized a pattern and unifies an implementation across programs. A speculated spec of a Reactive Observable is inherited from the implementation of Observables in the wild. The types of observer it accepts are the following:
 
-Types:
-- `open` - callback for ready emission
-- `next` - unary callback for data emission.
-- `fail` - unary callback for error emission.
-- `done` - unary callback for completed or cancelled emission.
+- `open` - callback for ready notification.
+- `next` - unary callback for data provision.
+- `fail` - unary callback for error notification.
+- `done` - unary callback for completion or cancellation notification.
 
-Rules:
-- `open` should be called first before running other types of an observer, this activates the Observable as well as the other observer methods.
-- `next` and `fail` observer can continue to emit errors as long as the Observable is active.
-- `done` should be called with a boolean parameter as an indication whether the Observable has been completed or canceled, this inactivates the Observable and any prior call to all observer methods should not be allowed.
-
-Below is a pseudo-code of its shape together with the observer.
+Below is a pseudo-code of its shape together with the observers.
 ```javascript
 const myobservable = (open, next, fail, done, observable) => {};
 ```

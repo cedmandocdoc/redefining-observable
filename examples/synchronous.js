@@ -1,69 +1,81 @@
-const observable = require('../libs/spec');
-const { noop, pipe, map, take, listen, teardown} = require('../libs/operators');
+const { Observable, Teardown } = require("../spec");
 
 // source
-const fromArray = array => (open, next, fail, done, external) => {
-  let cancelled = false;
-  external(
-    noop,
-    value => {
-      if (value === observable.CANCEL) {
-        cancelled = true;
+const fromArray = (array) =>
+  new Observable((open, next, fail, done, external) => {
+    let cancelled = false;
+    external
+      .tap((value) => {
+        if (value !== Observable.CANCEL) return;
+        clearInterval(id);
         done(true);
-      }
-    },
-    noop,
-    noop,
-    noop
-  );
-  open();
-  for (let index = 0; index < array.length; index++) {
-    if (cancelled) break;
-    next(array[index]);
-  }
-  if (!cancelled) done(false);
-};
+      })
+      .listen();
+    open();
+    for (let index = 0; index < array.length; index++) {
+      if (cancelled) break;
+      next(array[index]);
+    }
+    if (!cancelled) done(false);
+  });
 
-
-const data = [1, 2, 3 , 4, 5, 6, 7, 8, 9, 10];
+const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 // no cancellation
-pipe(
-  fromArray(data),
-  listen(
-    () => console.log('open'),
-    value => console.log(value),
-    error => console.log(error),
-    cancelled => console.log(cancelled),
-  )
+console.log("no cancellation");
+fromArray(data).listen(
+  () => console.log("open"),
+  (value) => console.log(value),
+  (error) => console.log(error),
+  (cancelled) => console.log(cancelled)
 );
+
+console.log("\n");
+console.log("take operator cancellation");
 
 // take operator cancellation
-pipe(
-  fromArray(data),
-  map(count => `Current count: ${count}`),
-  take(5),
-  listen(
-    () => console.log('open'),
-    value => console.log(value),
-    error => console.log(error),
-    cancelled => console.log(cancelled),
-  )
-);
+fromArray(data)
+  .map((count) => `Current count: ${count}`)
+  .take(5)
+  .listen(
+    () => console.log("open"),
+    (value) => console.log(value),
+    (error) => console.log(error),
+    (cancelled) => console.log(cancelled)
+  );
 
-// manaul cancellation
-const stop = teardown(noop);
-pipe(
-  fromArray(data),
-  map(count => `Current count: ${count}`),
-  listen(
-    () => console.log('open'),
-    value => {
+console.log("\n");
+console.log("manual cancellation with emission");
+
+// manual cancellation with emission
+let teardown = new Teardown();
+fromArray(data)
+  .map((count) => `Current count: ${count}`)
+  .listen(
+    () => console.log("open"),
+    (value) => {
       console.log(value);
-      if (value === 'Current count: 5') stop.run();
+      if (value === "Current count: 5") teardown.run();
     },
-    error => console.log(error),
-    cancelled => console.log(cancelled),
-    stop.observable
-  )
-);
+    (error) => console.log(error),
+    (cancelled) => console.log(cancelled),
+    teardown
+  );
+  
+console.log("\n");
+console.log("manual cancellation with no emission");
+
+// manual cancellation with no emissio
+teardown = new Teardown();
+fromArray(data)
+  .map((count) => `Current count: ${count}`)
+  .listen(
+    () => {
+      teardown.run();
+      console.log("open");
+    },
+    (value) => console.log(value),
+    (error) => console.log(error),
+    (cancelled) => console.log(cancelled),
+    teardown
+  );
