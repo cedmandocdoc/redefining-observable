@@ -7,7 +7,7 @@ const fromArray = (array) =>
     external
       .tap((value) => {
         if (value !== Observable.CANCEL) return;
-        clearInterval(id);
+        cancelled = true;
         done(true);
       })
       .listen();
@@ -79,3 +79,4 @@ fromArray(data)
     (cancelled) => console.log(cancelled),
     teardown
   );
+
