@@ -18,6 +18,18 @@ class Observable {
     });
   }
 
+  filter(fn) {
+    return new Observable((open, next, fail, done, external) => {
+      this.listen(
+        open,
+        (value) => fn(value) && next(value),
+        fail,
+        done,
+        external
+      );
+    });
+  }
+
   take(amount) {
     return new Observable((open, next, fail, done, external) => {
       let count = 0;
