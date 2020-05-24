@@ -5,7 +5,7 @@ const fromArray = (array) =>
   new Observable((open, next, fail, done, external) => {
     let cancelled = false;
     external
-      .tap((value) => {
+      .tap(([value]) => {
         if (value !== Observable.CANCEL) return;
         cancelled = true;
         done(true);

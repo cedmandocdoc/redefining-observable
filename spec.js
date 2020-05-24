@@ -72,7 +72,7 @@ class Observable {
           fail(error);
         }
       },
-      external.tap((value) => {
+      external.tap(([value]) => {
         if (value === Observable.CANCEL) {
           cancelled = true;
         }
@@ -97,7 +97,7 @@ class Teardown extends Observable {
     external = new Observable(noop)
   ) {
     open();
-    this.run = () => next(Observable.CANCEL);
+    this.run = () => next([Observable.CANCEL]);
     this.producer(open, next, fail, done, external);
   }
 }

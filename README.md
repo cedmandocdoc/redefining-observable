@@ -101,7 +101,7 @@ const myobservable = (open, next, fail, done, observable) => {
   next([symbol, payload]); // communicate with other observable through type and a payload
 };
 ```
-For a complete example, see `spec.js` on the examples folder. It exports a function that accepts a Reactive Observable and wrap its observer to follow the types and rules stated above.
+For a complete example of the specification, see [spec.js](https://github.com/cedmandocdoc/redefining-observable/blob/master/spec.js#L3).
 
 ## Final Words
 
