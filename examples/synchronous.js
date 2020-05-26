@@ -6,18 +6,15 @@ const fromArray = (array) =>
     let cancelled = false;
     external
       .filter(([value]) => value === Observable.CANCEL)
-      .take(1)
-      .tap(() => {
-        cancelled = true;
-        done(true);
-      })
+      .tap(() => (cancelled = true))
       .listen();
     open();
     for (let index = 0; index < array.length; index++) {
       if (cancelled) break;
       next(array[index]);
     }
-    if (!cancelled) done(false);
+
+    if (!cancelled) done();
   });
 
 const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -28,7 +25,7 @@ fromArray(data).listen(
   () => console.log("open"),
   (value) => console.log(value),
   (error) => console.log(error),
-  (cancelled) => console.log(cancelled)
+  () => console.log("complete")
 );
 
 console.log("\n");
@@ -42,7 +39,7 @@ fromArray(data)
     () => console.log("open"),
     (value) => console.log(value),
     (error) => console.log(error),
-    (cancelled) => console.log(cancelled)
+    () => console.log("complete")
   );
 
 console.log("\n");
@@ -59,25 +56,22 @@ fromArray(data)
       if (value === "Current count: 5") teardown.run();
     },
     (error) => console.log(error),
-    (cancelled) => console.log(cancelled),
+    () => console.log("complete"),
     teardown
   );
-  
+
 console.log("\n");
 console.log("manual cancellation with no emission");
 
 // manual cancellation with no emissio
 teardown = new Teardown();
-fromArray(data)
-  .map((count) => `Current count: ${count}`)
-  .listen(
-    () => {
-      teardown.run();
-      console.log("open");
-    },
-    (value) => console.log(value),
-    (error) => console.log(error),
-    (cancelled) => console.log(cancelled),
-    teardown
-  );
-
+fromArray(data).listen(
+  () => {
+    teardown.run();
+    console.log("open");
+  },
+  (value) => console.log(value),
+  (error) => console.log(error),
+  (cancelled) => console.log(cancelled),
+  teardown
+);

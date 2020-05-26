@@ -67,9 +67,9 @@ The code above forms a communication between two observables. The `intervalObser
 
 ## Reactive Observable pattern
 
-A reactive observable pattern opens up a whole new set of doors. Cancellation is one thing, but never limits to that. A timer for instance, emits data in the form of time but also listens to an external entity when to propagate or when to pause or when to completely stop. Pull observables can be also be built by this pattern, on which the producer listens to a consumer request as an indication that the data will be sent.
+A reactive observable pattern opens up a whole new set of doors. Cancellation is one thing, but never limits to that. A timer for instance, emits data in the form of time but also listens to an external entity when to propagate or when to pause or when to completely stop. Pull observables can be also be built by this pattern, on which the producer listens to a consumer request as an indication that the data should be sent.
 
-Sometimes the name reactive observable is hard to comprehend. The capability of being observed does not directly imply that data will be sent. A reactive data stream is another name to think of this pattern. Using this term it reverses the idea of being observed directly to emit data. The term `Reactive Observable` has been only used to gain attraction since the word Observable is famous in reactive programming.
+Sometimes the name reactive observable is hard to comprehend. The capability of being observed does not directly imply that data will be sent. A reactive data stream is another name to think of this pattern. Using this term it reverses the idea of being observed directly to emit data. The term Reactive Observable has been only used to gain attraction since the word Observable is famous in reactive programming.
 
 For what a Reactive Observable provides, its definition could be, an object that can be observed and to observe. Below is its pseudo-code form.
 
@@ -85,14 +85,14 @@ A pattern is not enough to apply the idea in a real-world program. Specification
 - `open` - callback for ready notification.
 - `next` - unary callback for data provision.
 - `fail` - unary callback for error notification.
-- `done` - unary callback for completion or cancellation notification.
+- `done` - unary callback for completion notification.
 
 Below is a pseudo-code of its shape together with the observers.
 ```javascript
 const myobservable = (open, next, fail, done, observable) => {};
 ```
 
-Next is the specification for external observable, for Observables to properly play with each other, their communication should be bounded by some rules. Most of the time, external Observable emits cancellation but it should never limit to that. To handle generic communication, Symbols can be used to represent data without colliding with one another. Moreover a representation is not enough for an Observable to react, some representation may impose with the same type but could have different variables. For instance, a timer Observable that reacts on a signal that jumps over a certain period of time. The representation is to jump but it also needs to tell on what time the timer should jump. The specification for an external Observable should emit a type and payload.
+Next is the specification for external observable, for Observables to properly play with each other, their communication should be bounded by some rules. Most of the time, external Observable emits cancellation but it should never limit to that. To handle generic communication, Symbols can be used to represent data without colliding with one another. Moreover a representation is not enough for an Observable to react, some representation may impose with the same type but could have different variables. For instance, a timer Observable that reacts on a signal that jumps over a certain period of time. The representation is to jump but it also needs to tell on what time the timer should jump. The specification for an external Observable should emit a type and payload. Moreover, external Observable will be cleaned up when the `done` observer has been called and when it emits a cancellation context.
 
 Below is a pseudo code implementation of Observable communication.
 ```javascript
@@ -101,6 +101,7 @@ const myobservable = (open, next, fail, done, observable) => {
   next([symbol, payload]); // communicate with other observable through type and a payload
 };
 ```
+
 For a complete example of the specification, see [spec.js](https://github.com/cedmandocdoc/redefining-observable/blob/master/spec.js#L3).
 
 ## Final Words

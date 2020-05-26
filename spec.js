@@ -33,16 +33,15 @@ class Observable {
   take(amount) {
     return new Observable((open, next, fail, done, external) => {
       let count = 0;
-      const teardown = new Teardown(external.producer);
       this.listen(
         open,
         (value) => {
           next(value);
-          if (++count >= amount) teardown.run();
+          if (++count >= amount) done();
         },
         fail,
         done,
-        teardown
+        external
       );
     });
   }
@@ -55,16 +54,16 @@ class Observable {
     external = new Observable(noop)
   ) {
     let completed = false;
-    let cancelled = false;
     let active = false;
+    const teardown = new Teardown(external);
     this.producer(
       () => {
-        if (active || completed) return;
+        if (active) return;
         active = true;
         open();
       },
       (value) => {
-        if (!active || cancelled || completed) return;
+        if (!active || completed) return;
         try {
           next(value);
         } catch (error) {
@@ -72,23 +71,22 @@ class Observable {
         }
       },
       (error) => {
-        if (!active || cancelled || completed) return;
+        if (!active || completed) return;
         fail(error);
       },
-      (cancelled) => {
+      () => {
         if (!active || completed) return;
         completed = true;
         try {
-          done(cancelled);
+          teardown.run();
+          done();
         } catch (error) {
           fail(error);
         }
       },
-      external.tap(([value]) => {
-        if (value === Observable.CANCEL) {
-          cancelled = true;
-        }
-      })
+      teardown.tap(
+        ([value]) => value === Observable.CANCEL && (active = true)
+      )
     );
   }
 }
@@ -96,8 +94,8 @@ class Observable {
 Observable.CANCEL = Symbol("CANCEL");
 
 class Teardown extends Observable {
-  constructor(producer = noop) {
-    super(producer);
+  constructor(observable = new Observable(noop)) {
+    super((...args) => observable.listen(...args));
     this.run = noop;
   }
 

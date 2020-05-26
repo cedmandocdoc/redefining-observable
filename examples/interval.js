@@ -7,12 +7,8 @@ const interval = (duration) =>
     open();
     external
       .filter(([value]) => value === Observable.CANCEL)
-      .take(1)
-      .tap(() => {
-        clearInterval(id);
-        done(true);
-      })
-      .listen();
+      .tap(() => clearInterval(id))
+      .listen()
   });
 
 interval(100)
@@ -22,5 +18,5 @@ interval(100)
     () => console.log("open"),
     (value) => console.log(value),
     (error) => console.log(error),
-    (cancelled) => console.log(cancelled)
+    () => console.log('complete')
   );
