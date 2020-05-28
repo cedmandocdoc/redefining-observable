@@ -89,14 +89,16 @@ A pattern is not enough to apply the idea in a real-world program. Specification
 
 Below is a pseudo-code of its shape together with the observers.
 ```javascript
-const myobservable = (open, next, fail, done, observable) => {};
+const myobservable = (open, next, fail, done, externalObservable) => {};
 ```
 
-Next is the specification for external observable, for Observables to properly play with each other, their communication should be bounded by some rules. Most of the time, external Observable emits cancellation but it should never limit to that. To handle generic communication, Symbols can be used to represent data without colliding with one another. Moreover a representation is not enough for an Observable to react, some representation may impose with the same type but could have different variables. For instance, a timer Observable that reacts on a signal that jumps over a certain period of time. The representation is to jump but it also needs to tell on what time the timer should jump. The specification for an external Observable should emit a type and payload. Moreover, external Observable will be cleaned up when the `done` observer has been called and when it emits a cancellation context.
+Next is the specification for external observable, for Observables to properly play with each other, their communication should be bounded by some rules. Most of the time, external Observable emits cancellation but it should never limit to that. To handle generic communication, Symbols can be used to represent data without colliding with one another.
+
+Moreover a representation is not enough for an Observable to react, some representation may impose with the same type but could have different variables. For instance, a timer Observable that reacts on a signal that jumps over a certain period of time. The representation is to jump but it also needs to tell on what time the timer should jump. The specification for an external Observable should emit a type and payload. Lastly, it will get unsubscribed upon calling `done` observer.
 
 Below is a pseudo code implementation of Observable communication.
 ```javascript
-const myobservable = (open, next, fail, done, observable) => {
+const externalObservable = (open, next, fail, done) => {
   open();
   next([symbol, payload]); // communicate with other observable through type and a payload
 };

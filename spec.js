@@ -45,7 +45,7 @@ class Observable {
         },
         fail,
         done,
-        external
+        emitter
       );
     });
   }
@@ -85,7 +85,7 @@ class Observable {
           state = DONE
         }
       },
-      teardown
+      teardown.filter(() => state === ACTIVE)
     );
   }
 }
