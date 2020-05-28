@@ -1,4 +1,4 @@
-const { Observable, Teardown } = require("../spec");
+const { Observable, Emitter } = require("../spec");
 
 // source
 const fromArray = (array) =>
@@ -6,7 +6,10 @@ const fromArray = (array) =>
     let cancelled = false;
     external
       .filter(([value]) => value === Observable.CANCEL)
-      .tap(() => (cancelled = true))
+      .tap(() => {
+        cancelled = true;
+        done(cancelled);
+      })
       .listen();
     open();
     for (let index = 0; index < array.length; index++) {
@@ -14,7 +17,7 @@ const fromArray = (array) =>
       next(array[index]);
     }
 
-    if (!cancelled) done();
+    if (!cancelled) done(cancelled);
   });
 
 const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -25,7 +28,7 @@ fromArray(data).listen(
   () => console.log("open"),
   (value) => console.log(value),
   (error) => console.log(error),
-  () => console.log("complete")
+  (cancelled) => console.log('cancelled', cancelled)
 );
 
 console.log("\n");
@@ -39,39 +42,39 @@ fromArray(data)
     () => console.log("open"),
     (value) => console.log(value),
     (error) => console.log(error),
-    () => console.log("complete")
+    (cancelled) => console.log('cancelled', cancelled)
   );
 
 console.log("\n");
 console.log("manual cancellation with emission");
 
 // manual cancellation with emission
-let teardown = new Teardown();
+let emitter = new Emitter();
 fromArray(data)
   .map((count) => `Current count: ${count}`)
   .listen(
     () => console.log("open"),
     (value) => {
       console.log(value);
-      if (value === "Current count: 5") teardown.run();
+      if (value === "Current count: 5") emitter.next([Observable.CANCEL]);
     },
     (error) => console.log(error),
-    () => console.log("complete"),
-    teardown
+    (cancelled) => console.log('cancelled', cancelled),
+    emitter
   );
 
 console.log("\n");
 console.log("manual cancellation with no emission");
 
 // manual cancellation with no emissio
-teardown = new Teardown();
+emitter = new Emitter();
 fromArray(data).listen(
   () => {
-    teardown.run();
     console.log("open");
+    emitter.next([Observable.CANCEL]);
   },
   (value) => console.log(value),
   (error) => console.log(error),
-  (cancelled) => console.log(cancelled),
-  teardown
+  (cancelled) => console.log('cancelled', cancelled),
+  emitter
 );

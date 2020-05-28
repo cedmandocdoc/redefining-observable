@@ -1,3 +1,6 @@
+const IDLE = 0;
+const ACTIVE = 1;
+const DONE = 2;
 const noop = () => {};
 
 class Observable {
@@ -33,11 +36,12 @@ class Observable {
   take(amount) {
     return new Observable((open, next, fail, done, external) => {
       let count = 0;
+      const emitter = new Emitter(external);
       this.listen(
         open,
         (value) => {
           next(value);
-          if (++count >= amount) done();
+          if (++count >= amount) emitter.next([Observable.CANCEL])
         },
         fail,
         done,
@@ -53,45 +57,59 @@ class Observable {
     done = noop,
     external = new Observable(noop)
   ) {
-    let completed = false;
-    let active = false;
     const teardown = new Teardown(external);
+    let state = IDLE;
     this.producer(
       () => {
-        if (active) return;
-        active = true;
-        open();
+        if (state === IDLE) {
+          state = ACTIVE;
+          open();
+        } 
       },
       (value) => {
-        if (!active || completed) return;
-        try {
-          next(value);
-        } catch (error) {
-          fail(error);
+        if (state === ACTIVE) {
+          try {
+            next(value);
+          } catch (error) {
+            fail(error);
+          }
         }
       },
       (error) => {
-        if (!active || completed) return;
-        fail(error);
+        if (state === ACTIVE) fail(error);
       },
-      () => {
-        if (!active || completed) return;
-        completed = true;
-        try {
-          teardown.run();
-          done();
-        } catch (error) {
-          fail(error);
+      (cancelled) => {
+        if (state === ACTIVE) {
+          teardown.run()
+          done(cancelled);
+          state = DONE
         }
       },
-      teardown.tap(
-        ([value]) => value === Observable.CANCEL && (active = true)
-      )
+      teardown
     );
   }
 }
 
 Observable.CANCEL = Symbol("CANCEL");
+
+class Emitter extends Observable {
+  constructor(observable = new Observable(noop)) {
+    super((...args) => observable.listen(...args));
+    this.next = noop;
+  }
+
+  listen(
+    open = noop,
+    next = noop,
+    fail = noop,
+    done = noop,
+    external = new Observable(noop)
+  ) {
+    open();
+    this.next = next;
+    this.producer(open, next, fail, done, external);
+  }
+}
 
 class Teardown extends Observable {
   constructor(observable = new Observable(noop)) {
@@ -107,10 +125,12 @@ class Teardown extends Observable {
     external = new Observable(noop)
   ) {
     open();
-    this.run = () => next([Observable.CANCEL]);
-    this.producer(open, next, fail, done, external);
+    const source = new Emitter(external);
+    this.run = () => source.next([Observable.CANCEL]);
+    this.producer(open, next, fail, done, source);
   }
 }
 
 module.exports.Observable = Observable;
+module.exports.Emitter = Emitter;
 module.exports.Teardown = Teardown;
