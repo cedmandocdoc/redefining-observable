@@ -1,0 +1,31 @@
+{
+  "name": "redefining-observable",
+  "version": "0.0.0",
+  "description": "A shift of perspective on Observable",
+  "main": "Observable.js",
+  "repository": "git@github.com:cedmandocdoc/redefining-observable.git",
+  "author": "Cedrick Mandocdoc <cedrickmandocdoc@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "keywords": [
+    "stream",
+    "observable",
+    "event",
+    "controllable stream",
+    "controllable observable",
+    "controllable event",
+    "functional",
+    "reactive",
+    "asynchonous",
+    "functional programming",
+    "reactive programming",
+    "asynchronous programming"
+  ],
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.0",
+    "jest": "^26.0.1"
+  }
+}

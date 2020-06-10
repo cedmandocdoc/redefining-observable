@@ -1,6 +1,6 @@
-const { Observable } = require("../spec");
+const Observable = require("../Observable");
 
-const interval = (duration) =>
+const interval = duration =>
   new Observable((open, next, fail, done, external) => {
     let count = 0;
     const id = setInterval(() => next(++count), duration);
@@ -11,15 +11,15 @@ const interval = (duration) =>
         clearInterval(id);
         done(true);
       })
-      .listen()
+      .listen();
   });
 
 interval(100)
-  .map((count) => `Current count: ${count}`)
+  .map(count => `Current count: ${count}`)
   .take(5)
   .listen(
     () => console.log("open"),
-    (value) => console.log(value),
-    (error) => console.log(error),
-    (cancelled) => console.log('cancelled', cancelled)
+    value => console.log(value),
+    error => console.log(error),
+    cancelled => console.log("cancelled", cancelled)
   );

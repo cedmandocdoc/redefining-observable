@@ -10,12 +10,12 @@ class Observable {
 
   map(fn) {
     return new Observable((open, next, fail, done, external) => {
-      this.listen(open, (value) => next(fn(value)), fail, done, external);
+      this.listen(open, value => next(fn(value)), fail, done, external);
     });
   }
 
   tap(fn) {
-    return this.map((value) => {
+    return this.map(value => {
       fn(value);
       return value;
     });
@@ -25,7 +25,7 @@ class Observable {
     return new Observable((open, next, fail, done, external) => {
       this.listen(
         open,
-        (value) => fn(value) && next(value),
+        value => fn(value) && next(value),
         fail,
         done,
         external
@@ -39,9 +39,9 @@ class Observable {
       const emitter = new Emitter(external);
       this.listen(
         open,
-        (value) => {
+        value => {
           next(value);
-          if (++count >= amount) emitter.next([Observable.CANCEL])
+          if (++count >= amount) emitter.next([Observable.CANCEL]);
         },
         fail,
         done,
@@ -64,9 +64,9 @@ class Observable {
         if (state === IDLE) {
           state = ACTIVE;
           open();
-        } 
+        }
       },
-      (value) => {
+      value => {
         if (state === ACTIVE) {
           try {
             next(value);
@@ -75,22 +75,20 @@ class Observable {
           }
         }
       },
-      (error) => {
+      error => {
         if (state === ACTIVE) fail(error);
       },
-      (cancelled) => {
+      cancelled => {
         if (state === ACTIVE) {
-          teardown.run()
+          teardown.run();
           done(cancelled);
-          state = DONE
+          state = DONE;
         }
       },
       teardown.filter(() => state === ACTIVE)
     );
   }
 }
-
-Observable.CANCEL = Symbol("CANCEL");
 
 class Emitter extends Observable {
   constructor(observable = new Observable(noop)) {
@@ -131,6 +129,8 @@ class Teardown extends Observable {
   }
 }
 
-module.exports.Observable = Observable;
-module.exports.Emitter = Emitter;
-module.exports.Teardown = Teardown;
+Observable.CANCEL = Symbol("CANCEL");
+Observable.Emitter = Emitter;
+Observable.Teardown = Teardown;
+
+module.exports = Observable;

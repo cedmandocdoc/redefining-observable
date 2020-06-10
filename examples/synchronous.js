@@ -1,7 +1,7 @@
-const { Observable, Emitter } = require("../spec");
+const Observable = require("../Observable");
 
 // source
-const fromArray = (array) =>
+const fromArray = array =>
   new Observable((open, next, fail, done, external) => {
     let cancelled = false;
     external
@@ -26,9 +26,9 @@ const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 console.log("no cancellation");
 fromArray(data).listen(
   () => console.log("open"),
-  (value) => console.log(value),
-  (error) => console.log(error),
-  (cancelled) => console.log('cancelled', cancelled)
+  value => console.log(value),
+  error => console.log(error),
+  cancelled => console.log("cancelled", cancelled)
 );
 
 console.log("\n");
@@ -36,30 +36,30 @@ console.log("take operator cancellation");
 
 // take operator cancellation
 fromArray(data)
-  .map((count) => `Current count: ${count}`)
+  .map(count => `Current count: ${count}`)
   .take(5)
   .listen(
     () => console.log("open"),
-    (value) => console.log(value),
-    (error) => console.log(error),
-    (cancelled) => console.log('cancelled', cancelled)
+    value => console.log(value),
+    error => console.log(error),
+    cancelled => console.log("cancelled", cancelled)
   );
 
 console.log("\n");
 console.log("manual cancellation with emission");
 
 // manual cancellation with emission
-let emitter = new Emitter();
+let emitter = new Observable.Emitter();
 fromArray(data)
-  .map((count) => `Current count: ${count}`)
+  .map(count => `Current count: ${count}`)
   .listen(
     () => console.log("open"),
-    (value) => {
+    value => {
       console.log(value);
       if (value === "Current count: 5") emitter.next([Observable.CANCEL]);
     },
-    (error) => console.log(error),
-    (cancelled) => console.log('cancelled', cancelled),
+    error => console.log(error),
+    cancelled => console.log("cancelled", cancelled),
     emitter
   );
 
@@ -67,14 +67,14 @@ console.log("\n");
 console.log("manual cancellation with no emission");
 
 // manual cancellation with no emissio
-emitter = new Emitter();
+emitter = new Observable.Emitter();
 fromArray(data).listen(
   () => {
     console.log("open");
     emitter.next([Observable.CANCEL]);
   },
-  (value) => console.log(value),
-  (error) => console.log(error),
-  (cancelled) => console.log('cancelled', cancelled),
+  value => console.log(value),
+  error => console.log(error),
+  cancelled => console.log("cancelled", cancelled),
   emitter
 );
