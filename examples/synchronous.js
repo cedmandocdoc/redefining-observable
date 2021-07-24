@@ -5,8 +5,9 @@ const fromArray = array =>
   new Observable((open, next, fail, done, external) => {
     let cancelled = false;
     external
-      .filter(([value]) => value === Observable.CANCEL)
+      .filter((value) => value === Observable.CANCEL)
       .tap(() => {
+        // dirty, should be on listen -> next method
         cancelled = true;
         done(cancelled);
       })
@@ -49,32 +50,32 @@ console.log("\n");
 console.log("manual cancellation with emission");
 
 // manual cancellation with emission
-let emitter = new Observable.Emitter();
+let cancellation = new Observable.CancelSignal();
 fromArray(data)
   .map(count => `Current count: ${count}`)
   .listen(
     () => console.log("open"),
     value => {
       console.log(value);
-      if (value === "Current count: 5") emitter.next([Observable.CANCEL]);
+      if (value === "Current count: 5") cancellation.run()
     },
     error => console.log(error),
     cancelled => console.log("cancelled", cancelled),
-    emitter
+    cancellation
   );
 
 console.log("\n");
 console.log("manual cancellation with no emission");
 
-// manual cancellation with no emissio
-emitter = new Observable.Emitter();
+// manual cancellation with no emission
+cancellation = new Observable.CancelSignal();
 fromArray(data).listen(
   () => {
     console.log("open");
-    emitter.next([Observable.CANCEL]);
+    cancellation.run()
   },
   value => console.log(value),
   error => console.log(error),
   cancelled => console.log("cancelled", cancelled),
-  emitter
+  cancellation
 );

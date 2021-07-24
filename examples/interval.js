@@ -6,7 +6,7 @@ const interval = duration =>
     const id = setInterval(() => next(++count), duration);
     open();
     external
-      .filter(([value]) => value === Observable.CANCEL)
+      .filter((value) => value === Observable.CANCEL)
       .tap(() => {
         clearInterval(id);
         done(true);

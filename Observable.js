@@ -36,16 +36,16 @@ class Observable {
   take(amount) {
     return new Observable((open, next, fail, done, external) => {
       let count = 0;
-      const emitter = new Emitter(external);
+      const cancellation = new CancelInterceptor(external);
       this.listen(
         open,
         value => {
           next(value);
-          if (++count >= amount) emitter.next([Observable.CANCEL]);
+          if (++count >= amount) cancellation.run();
         },
         fail,
         done,
-        emitter
+        cancellation
       );
     });
   }
@@ -55,9 +55,9 @@ class Observable {
     next = noop,
     fail = noop,
     done = noop,
-    external = new Observable(noop)
+    external = new OpenObservable()
   ) {
-    const teardown = new Teardown(external);
+    const cancellation = new ExternalCancelInterceptor(external);
     let state = IDLE;
     this.producer(
       () => {
@@ -80,57 +80,67 @@ class Observable {
       },
       cancelled => {
         if (state === ACTIVE) {
-          teardown.run();
+          cancellation.run();
           done(cancelled);
           state = DONE;
         }
       },
-      teardown.filter(() => state === ACTIVE)
+      cancellation
     );
   }
 }
 
-class Emitter extends Observable {
-  constructor(observable = new Observable(noop)) {
-    super((...args) => observable.listen(...args));
-    this.next = noop;
-  }
-
-  listen(
-    open = noop,
-    next = noop,
-    fail = noop,
-    done = noop,
-    external = new Observable(noop)
-  ) {
-    open();
-    this.next = next;
-    this.producer(open, next, fail, done, external);
+// just an open observable that do nothing
+class OpenObservable extends Observable {
+  constructor() {
+    super(open => open())
   }
 }
 
-class Teardown extends Observable {
-  constructor(observable = new Observable(noop)) {
-    super((...args) => observable.listen(...args));
+
+// an observable that just emits cancel signal
+class CancelSignal extends OpenObservable {
+  constructor() {
+    super();
     this.run = noop;
   }
 
-  listen(
-    open = noop,
-    next = noop,
-    fail = noop,
-    done = noop,
-    external = new Observable(noop)
-  ) {
-    open();
-    const source = new Emitter(external);
-    this.run = () => source.next([Observable.CANCEL]);
-    this.producer(open, next, fail, done, source);
+  listen(open, next, fail, done, external) {
+    this.run = () => next(Observable.CANCEL);
+    super.listen(open, next, fail, done, external);
+  }
+}
+
+// use internally to intercept observable
+// to emit cancel signal to the source via run.
+class CancelInterceptor extends Observable {
+  constructor(observable) {
+    super((open, next, fail, done, external) => observable.listen(open, next, fail, done, external));
+    this.run = noop;
+  }
+
+  listen(open, next, fail, done, external) {
+    this.run = () => next(Observable.CANCEL);
+    super.listen(open, next, fail, done, external);
+  }
+}
+
+// observable that intercepts external observable
+// for cancellation
+class ExternalCancelInterceptor extends Observable {
+  constructor(observable) {
+    super((open, next, fail, done, external) => observable.listen(open, next, fail, done, external));
+    this.run = noop;
+  }
+
+  listen(open, next, fail, done, external) {
+    const cancellation = new CancelInterceptor(external);
+    this.run = () => cancellation.run();
+    super.listen(open, next, fail, done, cancellation);
   }
 }
 
 Observable.CANCEL = Symbol("CANCEL");
-Observable.Emitter = Emitter;
-Observable.Teardown = Teardown;
+Observable.CancelSignal = CancelSignal;
 
 module.exports = Observable;

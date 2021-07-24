@@ -41,7 +41,7 @@ describe("Observable", () => {
         // listens to external
         // entity for cancellation token
         external
-          .filter(([value]) => value === Observable.CANCEL)
+          .filter((value) => value === Observable.CANCEL)
           .tap(cancel)
           .listen();
       });
@@ -57,7 +57,7 @@ describe("Observable", () => {
     // cancellation token every 3 second
     const cancellation = timer(3000)
       .tap(cancel)
-      .map(() => [Observable.CANCEL]);
+      .map(() => Observable.CANCEL);
 
     // Observable timer that produces
     // data every second
