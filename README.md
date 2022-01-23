@@ -42,7 +42,7 @@ setTimeout(() => cleanup(), 1000);
 
 Cancellation seems like it is a fundamental part of Observable but more likely it is an emergent property simply because it doesn't exist to all kinds of Observable. It just emerges to some because of the need for it. Some observer doesn't care about cancellation they just want to listen as long as the Observable emits data.
 
-Cancellation is just a part of an infinite number of emergent properties because the need for it depends on the logic of the application and logic could demand more, for instance a logic that demands pause in an Observable timer.
+Cancellation is just a part of an infinite number of emergent properties because the need for it depends on the logic of the application and logic could demand more, for instance a logic that demands pause in an Observable timer or an Observable that implements data pulling like iterables.
 
 Emergent properties act as a medium to notify an Observable. The process is similar to what Observable does, it propagates data to an entity, which in this case the source of data is reversed, the observer is the one that sends it and the observable is the one that listens to it. From the perspective of how they work, it implies that these emergent properties are indeed an Observable.
 
@@ -70,4 +70,4 @@ scrollObservable(e => console.log(e), cancelObservable);
 
 The code shows that the Observable now accepts another parameter named `external` which is also another Observable that is provided from the outside. As the Observable propagates data, it also listens to the `external` for a cancellation token named `CANCEL` which stops the propagation. This enables the Observable to react accordingly with the entity outside. This approach serves better both the Observable and outside entity, it provides concrete communication between them.
 
-With all that in mind, Observable, therefore, has the natural ability to propagate data and also to listen to the outside entity and react accordingly. It brings two fundamental properties: propagation and interaction. For a complete implementation of the idea, check out [Observable.js](https://github.com/cedmandocdoc/redefining-observable/blob/master/Observable.js) and for actual usage, check [examples](https://github.com/cedmandocdoc/redefining-observable/tree/master/examples) folder.
+With all that in mind, Observable, therefore, has the natural ability to propagate data and also to listen to the outside entity and react accordingly. It brings two fundamental properties: propagation and interaction. With this idea, we can generalized all, if not most, existing kinds of Observable like iterable and asynchronous. For a complete implementation of the idea, check out [Observable.js](https://github.com/cedmandocdoc/redefining-observable/blob/master/Observable.js) and for actual usage, check [examples](https://github.com/cedmandocdoc/redefining-observable/tree/master/examples) folder.
